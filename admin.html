@@ -1,354 +1,433 @@
-
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aai Matha Light House — Admin</title>
-<style>
-body{font-family:system-ui,Arial;background:#f5f7fb;color:#172033;margin:0;padding:18px}
-main{max-width:1000px;margin:auto}
-.card{background:white;border:1px solid #e1e5ed;border-radius:14px;padding:18px;margin:14px 0}
-input,select,textarea,button{font:inherit;padding:10px;border-radius:8px;border:1px solid #d7dce5;margin:5px 0;max-width:100%}
-button{background:#172844;color:white;border:0;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
-.item{padding:12px 0;border-bottom:1px solid #eee;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.item img{width:58px;height:58px;object-fit:contain}
-.hidden{display:none}
-.note{color:#667085;font-size:13px;line-height:1.5}
-#status{white-space:pre-wrap;color:#9a3412}
-.order{background:#fff;border:1px solid #e1e5ed;border-radius:10px;padding:14px;margin:12px 0}
-.order p{margin:6px 0;overflow-wrap:anywhere}
-.order ul{padding-left:22px}
-.tag{display:inline-block;background:#fef3c7;padding:4px 9px;border-radius:20px;font-size:13px}
-.confirmed{background:#dcfce7}
-.cancelled{background:#fee2e2}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aai Matha Light House — Admin</title>
+  <style>
+    :root { font-family: Arial, sans-serif; color:#172033; background:#f3f6fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:22px; }
+    main { max-width:1150px; margin:0 auto; }
+    h1,h2 { margin-top:0; }
+    .card { background:#fff; border:1px solid #dce3ee; border-radius:14px; padding:22px; margin:16px 0; box-shadow:0 3px 14px #1720330a; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+    label { display:block; font-weight:600; margin:10px 0 6px; }
+    input,select,textarea { width:100%; padding:11px; border:1px solid #cbd5e1; border-radius:8px; font:inherit; background:#fff; }
+    textarea { min-height:75px; resize:vertical; }
+    button { border:0; background:#172b4d; color:white; padding:11px 15px; border-radius:8px; font:inherit; cursor:pointer; }
+    button.secondary { background:#e8edf5; color:#172033; }
+    button.danger { background:#a32626; }
+    button:disabled { opacity:.55; cursor:wait; }
+    .muted { color:#64748b; }
+    .notice { padding:12px; border-radius:8px; background:#eef4ff; margin:12px 0; white-space:pre-wrap; }
+    .error { background:#fff0f0; color:#8b1c1c; }
+    .success { background:#eaf8ef; color:#176337; }
+    .hidden { display:none !important; }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:760px; }
+    th,td { text-align:left; padding:11px; border-bottom:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; }
+    .pill { display:inline-block; padding:4px 8px; border-radius:999px; background:#fff2cc; color:#6e5200; font-size:12px; }
+    .pill.Confirmed { background:#dcfce7; color:#166534; }
+    .pill.Cancelled { background:#fee2e2; color:#991b1b; }
+    .actions { display:flex; gap:7px; flex-wrap:wrap; }
+    .product-image { width:58px; height:58px; object-fit:cover; border-radius:8px; background:#eee; }
+    @media(max-width:600px){ body{padding:10px} .card{padding:15px} }
+  </style>
 </head>
 <body>
 <main>
-<h1>💡 Aai Matha Light House — Admin</h1>
-<p>Customer page: <a href="index.html">Open store</a></p>
+  <div class="row">
+    <div>
+      <p class="muted">Aai Matha Light House · Admin Panel</p>
+      <h1>Admin dashboard</h1>
+    </div>
+    <div class="actions">
+      <a href="index.html" target="_blank" rel="noopener">Open store</a>
+      <button id="logoutBtn" class="secondary hidden">Log out</button>
+    </div>
+  </div>
 
-<section class="card" id="login">
-<h2>Admin login</h2>
-<p class="note">Use your existing Supabase admin account.</p>
-<input id="email" type="email" placeholder="Admin email"><br>
-<input id="password" type="password" placeholder="Password"><br>
-<button onclick="loginAdmin()">Login</button>
-<p id="status"></p>
-</section>
+  <div id="notice" class="notice hidden" role="status"></div>
 
-<section class="card hidden" id="panel">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-<h2>Orders</h2>
-<div>
-<button onclick="loadOrders()">Refresh orders</button>
-<button onclick="logoutAdmin()">Log out</button>
-</div>
-</div>
-<p class="note">New orders should appear as Pending after they have been saved to Supabase.</p>
-<div id="orders">Loading orders…</div>
+  <section id="loginCard" class="card">
+    <h2>Admin login</h2>
+    <p class="muted">Sign in with the admin account that is authorized in Supabase.</p>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <p><button id="loginBtn" type="submit">Log in</button></p>
+    </form>
+  </section>
 
-<hr style="margin:28px 0">
+  <section id="dashboard" class="hidden">
+    <section class="card">
+      <div class="row">
+        <div>
+          <h2>Orders</h2>
+          <p class="muted">New orders should appear as Pending after they are saved to Supabase.</p>
+        </div>
+        <button id="refreshOrdersBtn">Refresh orders</button>
+      </div>
+      <div id="ordersMessage" class="muted">Loading orders…</div>
+      <div class="table-wrap">
+        <table id="ordersTable" class="hidden">
+          <thead><tr><th>Order</th><th>Customer</th><th>Address</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </section>
 
-<h2>Manage products</h2>
-<form id="productForm" onsubmit="saveProduct(event)">
-<input type="hidden" id="pid">
-<div class="grid">
-<input id="name" required placeholder="Product name">
-<input id="price" type="number" min="1" required placeholder="Price ₹">
-<select id="cat">
-<option>Outdoor Light</option><option>Wall Light</option>
-<option>Chandelier</option><option>Ceiling Light</option>
-<option>Duplex Hanging</option><option>Gate Light</option>
-<option>LED Track Light</option><option>Track Light</option>
-<option>Inslim LED Panel Light</option><option>Adore Deep Down Light</option>
-<option>Viva Deep Down Light</option><option>Aster Surface Panel Light</option>
-<option>Blaze Rimless Surface Light</option><option>Vista Deep COB</option>
-<option>Opal Deep COB</option><option>Striker Light</option>
-<option>Optima Deep Light COB</option><option>Tilt COB Light</option>
-<option>Iris Deep COB Spot</option><option>Nano Deep COB Spot</option>
-<option>Strip Light</option><option>Rope Light</option>
-<option>Neon Light</option><option>Bulb</option>
-</select>
-</div>
-<textarea id="description" placeholder="Description" style="width:100%"></textarea>
-<label>Product photo <input id="photo" type="file" accept="image/*"></label><br>
-<button type="submit">Save product</button>
-<button type="button" onclick="resetForm()">Clear form</button>
-</form>
-<p class="note">Orders under ₹5,000 have ₹50 delivery; orders ₹5,000 or above have free delivery.</p>
-<div id="products"></div>
-</section>
+    <section class="card">
+      <h2>Manage products</h2>
+      <p class="muted">Add or update products. Product image upload uses the Supabase Storage bucket named <code>product-images</code>.</p>
+      <form id="productForm">
+        <input id="productId" type="hidden">
+        <div class="grid">
+          <div><label for="productName">Product name *</label><input id="productName" required maxlength="160"></div>
+          <div><label for="productPrice">Price (₹) *</label><input id="productPrice" type="number" min="0" step="0.01" required></div>
+          <div><label for="productCategory">Category</label><input id="productCategory" maxlength="100"></div>
+          <div><label for="productImage">Product image</label><input id="productImage" type="file" accept="image/*"></div>
+        </div>
+        <label for="productDescription">Description</label><textarea id="productDescription"></textarea>
+        <div class="actions" style="margin-top:14px">
+          <button id="saveProductBtn" type="submit">Save product</button>
+          <button id="cancelEditBtn" type="button" class="secondary hidden">Cancel edit</button>
+          <button id="refreshProductsBtn" type="button" class="secondary">Refresh products</button>
+        </div>
+      </form>
+      <div id="productsMessage" class="muted" style="margin-top:14px"></div>
+      <div class="table-wrap">
+        <table id="productsTable">
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script src="./config.js"></script>
 <script>
-const configured =
-  window.SUPABASE_URL &&
-  window.SUPABASE_ANON_KEY &&
-  !window.SUPABASE_URL.includes('PASTE_') &&
-  !window.SUPABASE_ANON_KEY.includes('PASTE_');
+(() => {
+  const $ = id => document.getElementById(id);
+  const notice = $("notice");
+  let db = null;
+  let currentUser = null;
+  let ordersBusy = false;
+  let productsBusy = false;
 
-const db = configured
-  ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
-  : null;
+  function showNotice(message, type = "") {
+    notice.textContent = message;
+    notice.className = "notice" + (type ? " " + type : "");
+    notice.classList.remove("hidden");
+  }
+  function clearNotice() { notice.classList.add("hidden"); }
+  function setText(id, text) { $(id).textContent = text; }
+  function money(value) {
+    const n = Number(value);
+    return "₹" + (Number.isFinite(n) ? n.toFixed(2) : "0.00");
+  }
+  function safe(value) { return String(value ?? ""); }
+  function cell(text) {
+    const td = document.createElement("td");
+    td.textContent = safe(text);
+    return td;
+  }
+  function isConfigured() {
+    return window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.supabase;
+  }
 
-let editing = [];
+  async function isAdmin(userId) {
+    const { data, error } = await db
+      .from("admin_users")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) throw new Error("Could not verify admin access: " + error.message);
+    return !!data;
+  }
 
-function status(message) {
-  document.getElementById('status').textContent = message;
-}
+  async function showDashboard(user) {
+    currentUser = user;
+    if (!await isAdmin(user.id)) {
+      await db.auth.signOut();
+      throw new Error("This account is not listed in admin_users. Ask the project owner to authorize this admin account.");
+    }
+    $("loginCard").classList.add("hidden");
+    $("dashboard").classList.remove("hidden");
+    $("logoutBtn").classList.remove("hidden");
+    clearNotice();
+    await Promise.all([loadOrders(), loadProducts()]);
+  }
 
-async function loginAdmin() {
-  if (!db) return status('Check config.js: Supabase URL and anon key are required.');
+  async function loadOrders() {
+    if (ordersBusy) return;
+    ordersBusy = true;
+    $("refreshOrdersBtn").disabled = true;
+    setText("ordersMessage", "Loading orders…");
+    $("ordersTable").classList.add("hidden");
+    $("ordersBody").replaceChildren();
+    try {
+      const { data, error } = await db
+        .from("orders")
+        .select("id,order_id,customer_name,customer_phone,customer_address,payment_method,items,total,status,created_at")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        setText("ordersMessage", "No orders found. If the orders table has rows, check the orders SELECT RLS policy for admin users.");
+        return;
+      }
+      for (const order of data) {
+        const tr = document.createElement("tr");
+        tr.appendChild(cell(order.order_id));
+        const customer = document.createElement("td");
+        const customerName = document.createElement("strong");
+        customerName.textContent = safe(order.customer_name);
+        const phone = document.createElement("div");
+        phone.textContent = safe(order.customer_phone);
+        customer.append(customerName, phone);
+        tr.appendChild(customer);
+        tr.appendChild(cell(order.customer_address));
+        const itemCell = document.createElement("td");
+        const items = Array.isArray(order.items) ? order.items : [];
+        itemCell.textContent = items.map(i => `${safe(i.name)} × ${Number(i.quantity) || 0}`).join(", ") || "—";
+        tr.appendChild(itemCell);
+        tr.appendChild(cell(money(order.total)));
+        tr.appendChild(cell(order.payment_method));
+        const statusCell = document.createElement("td");
+        const pill = document.createElement("span");
+        pill.className = "pill " + safe(order.status);
+        pill.textContent = safe(order.status);
+        statusCell.appendChild(pill);
+        tr.appendChild(statusCell);
+        const actionCell = document.createElement("td");
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        if (order.status === "Pending") {
+          const confirm = document.createElement("button");
+          confirm.textContent = "Confirm";
+          confirm.addEventListener("click", () => updateOrderStatus(order.id, "Confirmed"));
+          const cancel = document.createElement("button");
+          cancel.textContent = "Cancel";
+          cancel.className = "danger";
+          cancel.addEventListener("click", () => updateOrderStatus(order.id, "Cancelled"));
+          actions.append(confirm, cancel);
+        } else {
+          actions.textContent = "No action";
+        }
+        actionCell.appendChild(actions);
+        tr.appendChild(actionCell);
+        $("ordersBody").appendChild(tr);
+      }
+      setText("ordersMessage", `${data.length} order(s) loaded.`);
+      $("ordersTable").classList.remove("hidden");
+    } catch (error) {
+      console.error("loadOrders error:", error);
+      setText("ordersMessage", "Could not load orders: " + (error.message || "Unknown error") +
+        ". Check that this admin user has an orders SELECT RLS policy.");
+    } finally {
+      ordersBusy = false;
+      $("refreshOrdersBtn").disabled = false;
+    }
+  }
 
-  const { error } = await db.auth.signInWithPassword({
-    email: document.getElementById('email').value,
-    password: document.getElementById('password').value
+  async function updateOrderStatus(id, status) {
+    if (!confirm(`Change this order status to ${status}?`)) return;
+    try {
+      const { error } = await db.from("orders").update({ status }).eq("id", id);
+      if (error) throw error;
+      showNotice("Order status updated.", "success");
+      await loadOrders();
+    } catch (error) {
+      showNotice("Could not update order status: " + error.message +
+        ". Check the orders UPDATE RLS policy for admin users.", "error");
+    }
+  }
+
+  async function loadProducts() {
+    if (productsBusy) return;
+    productsBusy = true;
+    setText("productsMessage", "Loading products…");
+    $("productsBody").replaceChildren();
+    try {
+      const { data, error } = await db
+        .from("products")
+        .select("id,name,price,category,description,image_url")
+        .order("id", { ascending: false });
+      if (error) throw error;
+      if (!data || !data.length) {
+        setText("productsMessage", "No products found.");
+        return;
+      }
+      for (const product of data) {
+        const tr = document.createElement("tr");
+        const imageTd = document.createElement("td");
+        if (product.image_url) {
+          const img = document.createElement("img");
+          img.className = "product-image";
+          img.src = product.image_url;
+          img.alt = safe(product.name);
+          imageTd.appendChild(img);
+        } else imageTd.textContent = "No image";
+        tr.appendChild(imageTd);
+        tr.appendChild(cell(product.name));
+        tr.appendChild(cell(product.category));
+        tr.appendChild(cell(money(product.price)));
+        tr.appendChild(cell(product.description));
+        const actionTd = document.createElement("td");
+        const actions = document.createElement("div");
+        actions.className = "actions";
+        const edit = document.createElement("button");
+        edit.textContent = "Edit";
+        edit.addEventListener("click", () => startEdit(product));
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "danger";
+        del.addEventListener("click", () => deleteProduct(product.id, product.name));
+        actions.append(edit, del);
+        actionTd.appendChild(actions);
+        tr.appendChild(actionTd);
+        $("productsBody").appendChild(tr);
+      }
+      setText("productsMessage", `${data.length} product(s) loaded.`);
+    } catch (error) {
+      console.error("loadProducts error:", error);
+      setText("productsMessage", "Could not load products: " + error.message);
+    } finally {
+      productsBusy = false;
+    }
+  }
+
+  function startEdit(p) {
+    $("productId").value = p.id;
+    $("productName").value = p.name || "";
+    $("productPrice").value = p.price ?? "";
+    $("productCategory").value = p.category || "";
+    $("productDescription").value = p.description || "";
+    $("productImage").value = "";
+    $("saveProductBtn").textContent = "Update product";
+    $("cancelEditBtn").classList.remove("hidden");
+    $("productForm").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function resetProductForm() {
+    $("productForm").reset();
+    $("productId").value = "";
+    $("saveProductBtn").textContent = "Save product";
+    $("cancelEditBtn").classList.add("hidden");
+  }
+
+  async function uploadImage(file) {
+    if (!file) return null;
+    if (!file.type.startsWith("image/")) throw new Error("Please select an image file.");
+    if (file.size > 5 * 1024 * 1024) throw new Error("Image must be 5 MB or smaller.");
+    const ext = (file.name.split(".").pop() || "jpg").replace(/[^a-z0-9]/gi, "").toLowerCase();
+    const path = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error } = await db.storage.from("product-images").upload(path, file, {
+      cacheControl: "3600", upsert: false, contentType: file.type
+    });
+    if (error) throw new Error("Image upload failed: " + error.message +
+      ". Check Storage policies for the product-images bucket.");
+    const { data } = db.storage.from("product-images").getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  $("productForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const btn = $("saveProductBtn");
+    btn.disabled = true;
+    try {
+      const id = $("productId").value;
+      const name = $("productName").value.trim();
+      const price = Number($("productPrice").value);
+      const category = $("productCategory").value.trim();
+      const description = $("productDescription").value.trim();
+      if (!name || !Number.isFinite(price) || price < 0) throw new Error("Enter a product name and valid price.");
+      const payload = { name, price, category, description };
+      const file = $("productImage").files[0];
+      if (file) payload.image_url = await uploadImage(file);
+      let result;
+      if (id) result = await db.from("products").update(payload).eq("id", Number(id));
+      else result = await db.from("products").insert(payload);
+      if (result.error) throw result.error;
+      resetProductForm();
+      showNotice(id ? "Product updated." : "Product added.", "success");
+      await loadProducts();
+    } catch (error) {
+      showNotice("Could not save product: " + error.message, "error");
+    } finally {
+      btn.disabled = false;
+    }
   });
 
-  if (error) return status(error.message);
-
-  document.getElementById('login').classList.add('hidden');
-  document.getElementById('panel').classList.remove('hidden');
-
-  await loadProducts();
-  await loadOrders();
-}
-
-async function logoutAdmin() {
-  if (db) await db.auth.signOut();
-  document.getElementById('panel').classList.add('hidden');
-  document.getElementById('login').classList.remove('hidden');
-}
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, char => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
-}
-
-function formatMoney(value) {
-  return '₹' + Number(value || 0).toLocaleString('en-IN');
-}
-
-function formatDate(value) {
-  if (!value) return '—';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('en-IN');
-}
-
-function renderItems(items) {
-  if (typeof items === 'string') {
-    try { items = JSON.parse(items); } catch { return '<p>Item details unavailable.</p>'; }
+  async function deleteProduct(id, name) {
+    if (!confirm(`Delete product "${name}"? This cannot be undone.`)) return;
+    try {
+      const { error } = await db.from("products").delete().eq("id", id);
+      if (error) throw error;
+      showNotice("Product deleted.", "success");
+      await loadProducts();
+    } catch (error) {
+      showNotice("Could not delete product: " + error.message, "error");
+    }
   }
 
-  if (!Array.isArray(items) || !items.length) {
-    return '<p>Item details unavailable.</p>';
-  }
+  $("loginForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    clearNotice();
+    const btn = $("loginBtn");
+    btn.disabled = true;
+    try {
+      if (!isConfigured()) throw new Error("config.js is missing SUPABASE_URL or SUPABASE_ANON_KEY.");
+      const { error } = await db.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      });
+      if (error) throw error;
+      const { data } = await db.auth.getUser();
+      await showDashboard(data.user);
+    } catch (error) {
+      showNotice("Login/setup error: " + error.message, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
 
-  return '<ul>' + items.map(item => {
-    const name = escapeHtml(item.name || item.productName || 'Product');
-    const quantity = Number(item.quantity || item.qty || 0);
-    const price = Number(item.price || 0);
+  $("logoutBtn").addEventListener("click", async () => {
+    if (db) await db.auth.signOut();
+    currentUser = null;
+    $("dashboard").classList.add("hidden");
+    $("loginCard").classList.remove("hidden");
+    $("logoutBtn").classList.add("hidden");
+    clearNotice();
+  });
+  $("refreshOrdersBtn").addEventListener("click", loadOrders);
+  $("refreshProductsBtn").addEventListener("click", loadProducts);
+  $("cancelEditBtn").addEventListener("click", resetProductForm);
 
-    return '<li>' + name +
-      ' — Qty: ' + quantity +
-      ' — ' + formatMoney(price) +
-      (quantity ? ' each; subtotal ' + formatMoney(price * quantity) : '') +
-      '</li>';
-  }).join('') + '</ul>';
-}
-
-async function loadOrders() {
-  const container = document.getElementById('orders');
-  container.textContent = 'Loading orders…';
-
-  const { data: sessionData } = await db.auth.getSession();
-  if (!sessionData.session) {
-    container.textContent = 'Please log in again.';
-    return;
-  }
-
-  const { data, error } = await db
-    .from('orders')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    container.textContent =
-      'Could not load orders: ' + error.message +
-      '. Check the orders table permissions in Supabase.';
-    return;
-  }
-
-  if (!data || !data.length) {
-    container.textContent = 'No orders found yet.';
-    return;
-  }
-
-  container.innerHTML = data.map(order => {
-    const state = String(order.status || 'Pending');
-    const stateClass = state === 'Confirmed' ? 'confirmed' :
-      state === 'Cancelled' ? 'cancelled' : '';
-
-    return `
-      <article class="order">
-        <h3>${escapeHtml(order.order_id || 'Order')}</h3>
-        <p><b>Date:</b> ${escapeHtml(formatDate(order.created_at))}</p>
-        <p><b>Customer:</b> ${escapeHtml(order.customer_name)}</p>
-        <p><b>Mobile:</b> ${escapeHtml(order.customer_phone)}</p>
-        <p><b>Address:</b> ${escapeHtml(order.customer_address)}</p>
-        <p><b>Payment:</b> ${escapeHtml(order.payment_method)}</p>
-        <p><b>Products:</b></p>
-        ${renderItems(order.items)}
-        <p><b>Total:</b> ${formatMoney(order.total)}</p>
-        <p><b>Status:</b>
-          <span class="tag ${stateClass}">${escapeHtml(state)}</span>
-        </p>
-        <p><b>SMS status:</b> ${escapeHtml(order.sms_status || 'Not sent')}</p>
-        ${state === 'Pending'
-          ? `<button onclick="confirmOrder('${escapeHtml(order.order_id)}')">Confirm Order</button>`
-          : ''}
-      </article>`;
-  }).join('');
-}
-
-async function confirmOrder(orderId) {
-  if (!confirm('Confirm order ' + orderId + '?')) return;
-
-  const { data: sessionData } = await db.auth.getSession();
-  const token = sessionData.session?.access_token;
-
-  if (!token) {
-    status('Please log in again.');
-    return;
-  }
-
-  try {
-    const response = await fetch('/.netlify/functions/confirm-order', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify({ orderId })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.ok) {
-      status(result.message || 'Order confirmation failed.');
+  async function init() {
+    if (!isConfigured()) {
+      showNotice("Configuration missing. Ensure config.js defines window.SUPABASE_URL and window.SUPABASE_ANON_KEY. Never put a service-role/secret key in this file.", "error");
       return;
     }
-
-    status('Order confirmed. SMS status: ' + (result.sms || 'Not sent'));
-    await loadOrders();
-  } catch (error) {
-    status('Could not reach the confirmation function. Check hosting/deployment.');
+    db = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    const { data, error } = await db.auth.getSession();
+    if (error) {
+      showNotice("Could not check login session: " + error.message, "error");
+      return;
+    }
+    if (data.session?.user) {
+      try { await showDashboard(data.session.user); }
+      catch (e) { showNotice(e.message, "error"); }
+    }
   }
-}
-
-async function loadProducts() {
-  const { data, error } = await db.from('products').select('*').order('id');
-
-  if (error) {
-    status(error.message);
-    return;
-  }
-
-  editing = data || [];
-
-  document.getElementById('products').innerHTML = editing.map(product => `
-    <div class="item">
-      <span>
-        ${product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="">` : ''}
-        <b>${escapeHtml(product.name)}</b><br>
-        <small>${escapeHtml(product.category)} · ${formatMoney(product.price)}</small>
-      </span>
-      <span>
-        <button onclick="editProduct(${Number(product.id)})">Edit</button>
-        <button onclick="deleteProduct(${Number(product.id)})">Delete</button>
-      </span>
-    </div>
-  `).join('') || '<p>No products yet. Add the first product above.</p>';
-}
-
-function editProduct(id) {
-  const product = editing.find(item => item.id === id);
-  if (!product) return;
-
-  document.getElementById('pid').value = product.id;
-  document.getElementById('name').value = product.name;
-  document.getElementById('price').value = product.price;
-  document.getElementById('cat').value = product.category;
-  document.getElementById('description').value = product.description || '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function resetForm() {
-  document.getElementById('productForm').reset();
-  document.getElementById('pid').value = '';
-}
-
-async function saveProduct(event) {
-  event.preventDefault();
-
-  const { data: sessionData } = await db.auth.getSession();
-  if (!sessionData.session) return status('Please log in again.');
-
-  const id = document.getElementById('pid').value;
-  const old = editing.find(product => String(product.id) === String(id));
-  let image_url = old?.image_url || '';
-
-  const file = document.getElementById('photo').files[0];
-
-  if (file) {
-    const path = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const { error: uploadError } = await db.storage
-      .from('product-images')
-      .upload(path, file, { upsert: true });
-
-    if (uploadError) return status('Photo upload failed: ' + uploadError.message);
-
-    image_url = db.storage.from('product-images').getPublicUrl(path).data.publicUrl;
-  }
-
-  const row = {
-    name: document.getElementById('name').value.trim(),
-    price: Number(document.getElementById('price').value),
-    category: document.getElementById('cat').value,
-    description: document.getElementById('description').value.trim(),
-    image_url
-  };
-
-  const result = id
-    ? await db.from('products').update(row).eq('id', Number(id))
-    : await db.from('products').insert(row);
-
-  if (result.error) return status(result.error.message);
-
-  resetForm();
-  await loadProducts();
-  status('Product saved.');
-}
-
-async function deleteProduct(id) {
-  if (!confirm('Delete this product?')) return;
-
-  const { error } = await db.from('products').delete().eq('id', id);
-  if (error) return status(error.message);
-
-  await loadProducts();
-}
+  init();
+})();
 </script>
 </body>
 </html>
-```
