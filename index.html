@@ -80,6 +80,19 @@ function openWhatsApp(msg){let num=getWhatsApp().replace(/\D/g,"");if(num.length
 function whatsappGeneral(){openWhatsApp("Hello Aai Matha Light House, I would like to enquire about your lighting products.")}
 function sendEnquiry(e){e.preventDefault();openWhatsApp("Hello Aai Matha Light House.\nName: "+document.getElementById("enqName").value+"\nEnquiry: "+document.getElementById("enqMsg").value)}
 function payOnline(){document.getElementById("payment").scrollIntoView({behavior:"smooth"});}
+function openUPI(event){
+  if(event) event.preventDefault();
+  const link="upi://pay?pa=8106393073%40goaxb&pn=Aai%20Matha%20Light%20House&cu=INR";
+  const isPhone=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(isPhone){
+    window.location.href=link;
+  } else {
+    const qr=document.getElementById("upiQr");
+    if(qr) qr.scrollIntoView({behavior:"smooth",block:"center"});
+    alert("Laptop par UPI app seedha nahi khul sakta. Phone se QR code scan karein.");
+  }
+  return false;
+}
 function readImageFile(file){return new Promise((resolve,reject)=>{if(!file){resolve("");return}if(!file.type.startsWith("image/")){reject(new Error("Please choose an image file."));return}const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{const canvas=document.createElement("canvas");const max=900;const scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL("image/jpeg",0.82))};img.onerror=()=>reject(new Error("Could not read that image."));img.src=reader.result};reader.onerror=()=>reject(new Error("Could not read that image."));reader.readAsDataURL(file)})}
 function toast(s){let t=document.getElementById("toast");t.textContent=s;t.style.display="block";setTimeout(()=>t.style.display="none",2500)}
 document.getElementById("year").textContent=new Date().getFullYear();renderProducts();renderCart();
@@ -91,13 +104,13 @@ document.getElementById("year").textContent=new Date().getFullYear();renderProdu
   <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center; justify-content:center;">
     <div style="flex:1; min-width:220px;">
       <h3>Option 1: Scan QR Code</h3>
-      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVgAAAFYAQAAAAA+F9ntAAACeElEQVR4nO2ay24jMQwEqxf+/1/uHEhKk9MG4/WGHCgvy+M6NBiBapGU+fHXn5+jhz3sYR/AvgDF0sKw/yAsXJ/20DuNfQEYIpoyljAWGJSv8T/ooHca+wKgohhLFA8M8uXTDnons5EVsA12RPl/a3g0awlnwtVf2E9peBgb+SGTg6zaxCDH904dHfROY1+w92pEFBnLawOvRQe909gXe38i56lW764HXw+901i5fhUOOBxDWYcMtdHxv7fYaziX162lALxScge9E1nVD46QCtfSbEvRRe8kNrOAL3s2Nqycn1Xke+idxsZtAhuMnZkgX00+xdjuoHckGxFOSxYJWbYdRo3ywG30DmIzByiTAiszCLLKozrhOuidyQrkjGZW0jJxrHz8cQ3PZRXJIc43V9bNc81KS9FH7yR2+Yfapt/SBFkFDqyD3qmskYzEKq2j7GLo5Ie3WYWBqLwQIa17RV41Oukdw2q33KgWHNl1q7jmmxZ6p7FR/0XLLKQvc/qI8L86+eEme6mfVS+zwrluG2WSO+gdySoax9F0g2xyxs043uvjGh7N2kJOD7ETL0DYiJMf3mOrgIZiqATJGFnyGjJppHcMi23XnS02aq6Jqlo+86mfvcGaNLvWDjbLtPncj99hJaL8gKJDv72D42w7/uEuWz2KXOc8VPmzGvk759td9jo/GbcMRUaodnI07T+q4cns9/nJGC2B1ayHywbuoHcmK+XY5JpHLduAtMoTffTOZE2N/4YDlqL15lOf/EesVG2i9eRSh+indwqbvbYcK5Gy4pBuOK92jfTOYevuQJZ56zjLQvCeMDn131vs1f/+lobDHvawPdkvkj5Ekm3Xuw8AAAAASUVORK5CYII=" alt="UPI QR Code for Aai Matha Light House" width="220" height="220" style="max-width:100%;height:auto;border:1px solid #eee;border-radius:8px;">
+      <img id="upiQr" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVgAAAFYAQAAAAA+F9ntAAACeElEQVR4nO2ay24jMQwEqxf+/1/uHEhKk9MG4/WGHCgvy+M6NBiBapGU+fHXn5+jhz3sYR/AvgDF0sKw/yAsXJ/20DuNfQEYIpoyljAWGJSv8T/ooHca+wKgohhLFA8M8uXTDnons5EVsA12RPl/a3g0awlnwtVf2E9peBgb+SGTg6zaxCDH904dHfROY1+w92pEFBnLawOvRQe909gXe38i56lW764HXw+901i5fhUOOBxDWYcMtdHxv7fYaziX162lALxScge9E1nVD46QCtfSbEvRRe8kNrOAL3s2Nqycn1Xke+idxsZtAhuMnZkgX00+xdjuoHckGxFOSxYJWbYdRo3ywG30DmIzByiTAiszCLLKozrhOuidyQrkjGZW0jJxrHz8cQ3PZRXJIc43V9bNc81KS9FH7yR2+Yfapt/SBFkFDqyD3qmskYzEKq2j7GLo5Ie3WYWBqLwQIa17RV41Oukdw2q33KgWHNl1q7jmmxZ6p7FR/0XLLKQvc/qI8L86+eEme6mfVS+zwrluG2WSO+gdySoax9F0g2xyxs043uvjGh7N2kJOD7ETL0DYiJMf3mOrgIZiqATJGFnyGjJppHcMi23XnS02aq6Jqlo+86mfvcGaNLvWDjbLtPncj99hJaL8gKJDv72D42w7/uEuWz2KXOc8VPmzGvk759td9jo/GbcMRUaodnI07T+q4cns9/nJGC2B1ayHywbuoHcmK+XY5JpHLduAtMoTffTOZE2N/4YDlqL15lOf/EesVG2i9eRSh+indwqbvbYcK5Gy4pBuOK92jfTOYevuQJZ56zjLQvCeMDn131vs1f/+lobDHvawPdkvkj5Ekm3Xuw8AAAAASUVORK5CYII=" alt="UPI QR Code for Aai Matha Light House" width="220" height="220" style="max-width:100%;height:auto;border:1px solid #eee;border-radius:8px;">
       <p class="note">Apne phone ke UPI app se QR scan karein aur order ka exact total amount enter karein.</p>
     </div>
     <div style="flex:1; min-width:220px;">
       <h3>Option 2: Open UPI App</h3>
       <p>Button dabane par phone ka supported UPI app khul sakta hai.</p>
-      <a href="upi://pay?pa=8106393073%40goaxb&pn=Aai%20Matha%20Light%20House&cu=INR" style="display:inline-block;text-decoration:none;background:#f4b740;color:#101b2d;font-weight:800;padding:13px 18px;border-radius:10px;">Pay using UPI App</a>
+      <a href="upi://pay?pa=8106393073%40goaxb&amp;pn=Aai%20Matha%20Light%20House&amp;cu=INR" style="display:inline-block;text-decoration:none;background:#f4b740;color:#101b2d;font-weight:800;padding:13px 18px;border-radius:10px;" aria-label="Open a UPI payment app">Pay using UPI App</a>
       <p class="note">Agar app nahi khulta, QR scan karein ya apne UPI app mein UPI ID manually enter karein.</p>
     </div>
   </div>
