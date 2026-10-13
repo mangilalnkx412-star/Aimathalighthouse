@@ -94,9 +94,12 @@ async function placeOrder(){
  if(button){button.disabled=true;button.textContent="Saving order...";button.style.opacity=".65"}
  result.textContent="Saving your order securely. Please wait...";
  try{
-   const response=await fetch("/.netlify/functions/create-order",{
+   const response=await fetch("https://tzfqmufpimzqctshixqw.supabase.co/functions/v1/create-order",{
      method:"POST",
-     headers:{"Content-Type":"application/json"},
+     headers:{
+       "Content-Type":"application/json",
+       "apikey":window.SUPABASE_ANON_KEY
+     },
      body:JSON.stringify({name,phone,address,paymentMethod:method,items})
    });
    let data={};
