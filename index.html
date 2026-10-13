@@ -43,7 +43,7 @@ footer{background:var(--navy);color:#fff;padding:30px 5%;margin-top:35px}.footer
 
 </main>
 <footer><div class="footer-inner"><div><b>💡 Aai Matha Light House</b><p>Lighting up homes, one room at a time.</p></div><div><b>Quick links</b><p><a href="#shop" style="color:#fff">Products</a> · <a href="#contact" style="color:#fff">Contact</a></p></div><div><p>© <span id="year"></span> Aai Matha Light House</p><p>Please confirm product prices and replace sample product details before accepting orders.</p></div></div></footer>
-<div class="overlay" id="cartOverlay" onclick="if(event.target===this)closeCart()"><aside class="drawer"><div class="drawer-head"><h2>Your cart</h2><button class="close" onclick="closeCart()">×</button></div><div id="cartItems"></div><div style="display:flex;justify-content:space-between;padding:8px 0;color:#667085"><span>Delivery charge</span><span id="deliveryTotal">₹0</span></div><div class="totals"><span>Order total</span><span id="cartTotal">₹0</span></div><h3>Delivery details</h3><div class="field"><label>Name</label><input id="custName" placeholder="Your name"></div><div class="field"><label>Phone</label><input id="custPhone" inputmode="tel" placeholder="10-digit mobile number"></div><div class="field"><label>Delivery address</label><textarea id="custAddress" rows="2" placeholder="Full address"></textarea></div><h3>Payment method</h3><label class="payment-choice"><input type="radio" name="checkoutPayment" value="COD" checked> Cash on Delivery (COD)</label><label class="payment-choice"><input type="radio" name="checkoutPayment" value="ONLINE"> Online Payment (UPI QR)</label><button class="wide goldwide" onclick="placeOrder()">Place Order</button><p class="note">COD orders show confirmation on this website. Online QR is shown for 30 seconds. UPI payments are not automatically verified.</p><div id="orderResult" class="note" aria-live="polite"></div></aside></div>
+<div class="overlay" id="cartOverlay" onclick="if(event.target===this)closeCart()"><aside class="drawer"><div class="drawer-head"><h2>Your cart</h2><button class="close" onclick="closeCart()">×</button></div><div id="cartItems"></div><div style="display:flex;justify-content:space-between;padding:8px 0;color:#667085"><span>Delivery charge</span><span id="deliveryTotal">₹0</span></div><div class="totals"><span>Order total</span><span id="cartTotal">₹0</span></div><h3>Delivery details</h3><div class="field"><label>Name</label><input id="custName" placeholder="Your name"></div><div class="field"><label>Phone</label><input id="custPhone" inputmode="tel" placeholder="10-digit mobile number"></div><div class="field"><label>Delivery address</label><textarea id="custAddress" rows="2" placeholder="Full address"></textarea></div><h3>Payment method</h3><label class="payment-choice"><input type="radio" name="checkoutPayment" value="COD" checked> Cash on Delivery (COD)</label><label class="payment-choice"><input type="radio" name="checkoutPayment" value="ONLINE"> Online Payment (UPI QR)</label><button class="wide goldwide" onclick="placeOrder()">Place Order</button><p class="note">Orders are saved only when the order server is deployed and connected. Online QR is shown for 30 seconds; UPI payments are not automatically verified.</p><div id="orderResult" class="note" aria-live="polite"></div></aside></div>
 <div class="detail-overlay" id="detailOverlay" onclick="if(event.target===this)closeProductDetails()"><section class="detail-card"><div class="drawer-head"><h2 id="detailName">Product details</h2><button class="close" onclick="closeProductDetails()" aria-label="Close">×</button></div><div class="detail-image" id="detailImage"></div><p class="tag" id="detailCategory"></p><h2 id="detailPrice"></h2><p id="detailDesc"></p><div class="detail-actions"><button class="primary" id="detailAdd">Add to cart</button><button class="secondary" id="detailAsk">Ask on WhatsApp</button></div></section></div><div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -78,33 +78,59 @@ function renderCart(){let ids=Object.keys(cart).filter(id=>products.some(p=>p.id
 function openCart(){document.getElementById("cartOverlay").classList.add("open");renderCart()}function closeCart(){document.getElementById("cartOverlay").classList.remove("open")}
 function getOrder(){let lines=Object.keys(cart).filter(id=>cart[id]>0&&products.some(p=>p.id==id)).map(id=>{let p=products.find(x=>x.id==id);return `${p.name} x ${cart[id]} = ${rupees(p.price*cart[id])}`});let subtotal=Object.keys(cart).reduce((s,id)=>{let p=products.find(x=>x.id==id);return s+(p?p.price*cart[id]:0)},0);let delivery=!lines.length?0:(subtotal>=5000?0:50);return {lines,subtotal,delivery,total:subtotal+delivery}}
 let qrHideTimer=null;
-function placeOrder(){
+async function placeOrder(){
  const name=document.getElementById("custName").value.trim();
- const phone=document.getElementById("custPhone").value.trim();
+ const phone=document.getElementById("custPhone").value.trim().replace(/\D/g,"");
  const address=document.getElementById("custAddress").value.trim();
  const o=getOrder();
  const method=document.querySelector('input[name="checkoutPayment"]:checked')?.value||"COD";
+ const result=document.getElementById("orderResult");
+ const button=document.querySelector('#cartOverlay button[onclick="placeOrder()"]');
  if(!o.lines.length)return toast("Your cart is empty");
  if(!name||!phone||!address)return toast("Please fill in name, phone and address");
- if(!/^\d{10}$/.test(phone.replace(/\D/g,"")))return toast("Please enter a valid 10-digit mobile number");
- const orderId="AAI"+Date.now().toString().slice(-8);
- const result=document.getElementById("orderResult");
- if(method==="COD"){
-   document.getElementById("payment").style.display="none";
-   result.innerHTML=`<strong style="color:#187a3d">COD order request received!</strong><br>Order ID: <strong>${orderId}</strong><br>Total: <strong>${rupees(o.total)}</strong><br>Please keep your phone available for shop confirmation.`;
-   toast("COD order confirmation shown");
-   return;
+ if(!/^\d{10}$/.test(phone))return toast("Please enter a valid 10-digit mobile number");
+ const items=Object.keys(cart).filter(id=>Number(cart[id])>0&&products.some(p=>String(p.id)===String(id))).map(id=>({productId:Number(id),quantity:Number(cart[id])}));
+ if(!items.length)return toast("Your cart is empty");
+ if(button){button.disabled=true;button.textContent="Saving order...";button.style.opacity=".65"}
+ result.textContent="Saving your order securely. Please wait...";
+ try{
+   const response=await fetch("/.netlify/functions/create-order",{
+     method:"POST",
+     headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({name,phone,address,paymentMethod:method,items})
+   });
+   let data={};
+   try{data=await response.json()}catch(_){data={}}
+   if(!response.ok||!data.ok){
+     const msg=data.error||"Order could not be saved.";
+     if(response.status===404||response.status===503){
+       result.innerHTML='<strong style="color:#a33">Order saving is not active yet.</strong><br>Please contact the shop on WhatsApp to place this order. This page has not marked it as confirmed.';
+       toast("Online order system is not active yet");
+     }else{result.textContent=msg;toast(msg)}
+     return;
+   }
+   const orderId=String(data.orderId||"");
+   const serverTotal=Number(data.total);
+   const finalTotal=Number.isFinite(serverTotal)?serverTotal:o.total;
+   result.innerHTML='<strong style="color:#187a3d">Order saved successfully!</strong><br>Order ID: <strong>'+esc(orderId)+'</strong><br>Total: <strong>'+rupees(finalTotal)+'</strong><br>Status: Pending shop confirmation.<br>Please keep your phone available. UPI payment is not automatically verified by this website.';
+   if(method==="COD"){
+     cart={};save();renderCart();toast("Order saved. Await shop confirmation.");return;
+   }
+   document.getElementById("payment").style.display="block";
+   document.getElementById("upiAmount").textContent=rupees(finalTotal);
+   document.getElementById("payment").scrollIntoView({behavior:"smooth",block:"start"});
+   if(qrHideTimer)clearTimeout(qrHideTimer);
+   qrHideTimer=setTimeout(()=>{
+     document.getElementById("payment").style.display="none";
+     result.innerHTML+='<br><span>QR display timed out. Your order remains pending; check your UPI app and contact the shop to confirm payment.</span>';
+   },30000);
+   cart={};save();renderCart();toast("Order saved. Check payment details.");
+ }catch(err){
+   result.innerHTML='<strong style="color:#a33">Could not connect to the order server.</strong><br>The order has not been confirmed or saved by this page. Please use WhatsApp to place the order.';
+   toast("Connection failed. Order not confirmed.");
+ }finally{
+   if(button){button.disabled=false;button.textContent="Place Order";button.style.opacity="1"}
  }
- result.innerHTML=`<strong>Order ID: ${orderId}</strong><br>Scan the UPI QR code and pay <strong>${rupees(o.total)}</strong> within 30 seconds. After payment, verify the transaction in your UPI app. This website cannot automatically verify payment.`;
- const section=document.getElementById("payment");
- section.style.display="block";
- document.getElementById("upiAmount").textContent=rupees(o.total);
- section.scrollIntoView({behavior:"smooth",block:"start"});
- if(qrHideTimer)clearTimeout(qrHideTimer);
- qrHideTimer=setTimeout(()=>{
-   section.style.display="none";
-   result.innerHTML+=`<br><span>QR display timed out. Select Online Payment and click Place Order again to show it.</span>`;
- },30000);
 }
 function getWhatsApp(){return "918106393073"}
 function openWhatsApp(msg){let num=getWhatsApp().replace(/\D/g,"");if(num.length<10){toast("Shop WhatsApp number not set yet. See setup notes.");alert("Add the shop WhatsApp number in the website setup before using this feature.");return}window.open("https://wa.me/"+num+"?text="+encodeURIComponent(msg),"_blank")}
