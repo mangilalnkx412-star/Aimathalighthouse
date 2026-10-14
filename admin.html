@@ -195,9 +195,39 @@
         tr.appendChild(customer);
         tr.appendChild(cell(order.customer_address));
         const itemCell = document.createElement("td");
-        const items = Array.isArray(order.items) ? order.items : [];
-        itemCell.textContent = items.map(i => `${safe(i.name)} × ${Number(i.quantity) || 0}`).join(", ") || "—";
-        tr.appendChild(itemCell);
+const items = Array.isArray(order.items) ? order.items : [];
+
+if (!items.length) {
+  itemCell.textContent = "—";
+} else {
+  for (const item of items) {
+    const itemRow = document.createElement("div");
+    itemRow.style.display = "flex";
+    itemRow.style.alignItems = "center";
+    itemRow.style.gap = "8px";
+    itemRow.style.marginBottom = "8px";
+
+    if (item.image_url) {
+      const img = document.createElement("img");
+      img.className = "product-image";
+      img.src = item.image_url;
+      img.alt = safe(item.name);
+      img.onerror = () => {
+        img.style.display = "none";
+      };
+      itemRow.appendChild(img);
+    }
+
+    const details = document.createElement("span");
+    details.textContent =
+      `${safe(item.name)} × ${Number(item.quantity) || 0}`;
+    itemRow.appendChild(details);
+
+    itemCell.appendChild(itemRow);
+  }
+}
+
+tr.appendChild(itemCell);
         tr.appendChild(cell(money(order.total)));
         tr.appendChild(cell(order.payment_method));
         const statusCell = document.createElement("td");
