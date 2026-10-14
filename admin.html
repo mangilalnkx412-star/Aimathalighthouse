@@ -240,17 +240,21 @@ tr.appendChild(itemCell);
         const actions = document.createElement("div");
         actions.className = "actions";
         if (order.status === "Pending") {
-          const confirm = document.createElement("button");
-          confirm.textContent = "Confirm";
-          confirm.addEventListener("click", () => updateOrderStatus(order.id, "Confirmed"));
-          const cancel = document.createElement("button");
-          cancel.textContent = "Cancel";
-          cancel.className = "danger";
-          cancel.addEventListener("click", () => updateOrderStatus(order.id, "Cancelled"));
-          actions.append(confirm, cancel);
-        } else {
-          actions.textContent = "No action";
+          const confirmBtn = document.createElement("button");
+          confirmBtn.textContent = "Confirm";
+          confirmBtn.addEventListener("click", () => updateOrderStatus(order.id, "Confirmed"));
+          const cancelBtn = document.createElement("button");
+          cancelBtn.textContent = "Cancel";
+          cancelBtn.className = "danger";
+          cancelBtn.addEventListener("click", () => updateOrderStatus(order.id, "Cancelled"));
+          actions.append(confirmBtn, cancelBtn);
         }
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "danger";
+        deleteBtn.addEventListener("click", () => deleteOrder(order.id, order.order_id));
+        actions.appendChild(deleteBtn);
         actionCell.appendChild(actions);
         tr.appendChild(actionCell);
         $("ordersBody").appendChild(tr);
@@ -264,6 +268,28 @@ tr.appendChild(itemCell);
     } finally {
       ordersBusy = false;
       $("refreshOrdersBtn").disabled = false;
+    }
+  }
+
+  async function deleteOrder(id, orderId) {
+    if (!confirm(`Permanently delete order ${orderId}? This cannot be undone.`)) return;
+
+    try {
+      const { error } = await db
+        .from("orders")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      showNotice(`Order ${orderId} deleted successfully.`, "success");
+      await loadOrders();
+    } catch (error) {
+      showNotice(
+        "Could not delete order: " + error.message +
+        ". Check the orders DELETE RLS policy for admin users.",
+        "error"
+      );
     }
   }
 
