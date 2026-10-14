@@ -76,7 +76,7 @@
       <div id="ordersMessage" class="muted">Loading orders…</div>
       <div class="table-wrap">
         <table id="ordersTable" class="hidden">
-          <thead><tr><th>Order</th><th>Customer</th><th>Address</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead>
+          <thead><tr><th>Order</th><th>Customer</th><th>Address</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Delivery date</th><th>Action</th></tr></thead>
           <tbody id="ordersBody"></tbody>
         </table>
       </div>
@@ -176,7 +176,7 @@
     try {
       const { data, error } = await db
         .from("orders")
-        .select("id,order_id,customer_name,customer_phone,customer_address,payment_method,items,total,status,created_at")
+        .select("id,order_id,customer_name,customer_phone,customer_address,payment_method,items,total,status,delivery_date,created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       if (!data || data.length === 0) {
@@ -236,18 +236,64 @@ tr.appendChild(itemCell);
         pill.textContent = safe(order.status);
         statusCell.appendChild(pill);
         tr.appendChild(statusCell);
+
+        const deliveryCell = document.createElement("td");
+        deliveryCell.textContent = order.delivery_date || "Not set";
+        tr.appendChild(deliveryCell);
+
         const actionCell = document.createElement("td");
         const actions = document.createElement("div");
         actions.className = "actions";
         if (order.status === "Pending") {
+          const dateInput = document.createElement("input");
+          dateInput.type = "date";
+          dateInput.setAttribute("aria-label", "Expected delivery date for order " + safe(order.order_id));
+          dateInput.value = order.delivery_date || "";
+          dateInput.style.minWidth = "150px";
+
           const confirmBtn = document.createElement("button");
           confirmBtn.textContent = "Confirm";
-          confirmBtn.addEventListener("click", () => updateOrderStatus(order.id, "Confirmed"));
+          confirmBtn.addEventListener("click", () => {
+            if (!dateInput.value) {
+              showNotice("Please select a delivery date before confirming order " + safe(order.order_id) + ".", "error");
+              dateInput.focus();
+              return;
+            }
+            if (dateInput.value < new Date().toISOString().slice(0, 10)) {
+              showNotice("Delivery date cannot be in the past.", "error");
+              dateInput.focus();
+              return;
+            }
+            updateOrderStatus(order.id, "Confirmed", dateInput.value);
+          });
+
           const cancelBtn = document.createElement("button");
           cancelBtn.textContent = "Cancel";
           cancelBtn.className = "danger";
           cancelBtn.addEventListener("click", () => updateOrderStatus(order.id, "Cancelled"));
-          actions.append(confirmBtn, cancelBtn);
+          actions.append(dateInput, confirmBtn, cancelBtn);
+        } else if (order.status === "Confirmed") {
+          const dateInput = document.createElement("input");
+          dateInput.type = "date";
+          dateInput.setAttribute("aria-label", "Update delivery date for order " + safe(order.order_id));
+          dateInput.value = order.delivery_date || "";
+          dateInput.style.minWidth = "150px";
+          const saveDateBtn = document.createElement("button");
+          saveDateBtn.textContent = "Save date";
+          saveDateBtn.addEventListener("click", () => {
+            if (!dateInput.value) {
+              showNotice("Please select a delivery date.", "error");
+              dateInput.focus();
+              return;
+            }
+            if (dateInput.value < new Date().toISOString().slice(0, 10)) {
+              showNotice("Delivery date cannot be in the past.", "error");
+              dateInput.focus();
+              return;
+            }
+            saveDeliveryDate(order.id, dateInput.value);
+          });
+          actions.append(dateInput, saveDateBtn);
         }
 
         const deleteBtn = document.createElement("button");
@@ -293,16 +339,35 @@ tr.appendChild(itemCell);
     }
   }
 
-  async function updateOrderStatus(id, status) {
-    if (!confirm(`Change this order status to ${status}?`)) return;
+  async function updateOrderStatus(id, status, deliveryDate = null) {
+    if (!confirm(status === "Confirmed"
+      ? `Confirm this order with delivery date ${deliveryDate}?`
+      : `Change this order status to ${status}?`)) return;
     try {
-      const { error } = await db.from("orders").update({ status }).eq("id", id);
+      const update = { status };
+      if (status === "Confirmed") update.delivery_date = deliveryDate;
+      const { error } = await db.from("orders").update(update).eq("id", id);
       if (error) throw error;
-      showNotice("Order status updated.", "success");
+      showNotice(status === "Confirmed"
+        ? "Order confirmed and delivery date saved. Please inform the customer manually."
+        : "Order status updated.", "success");
       await loadOrders();
     } catch (error) {
-      showNotice("Could not update order status: " + error.message +
-        ". Check the orders UPDATE RLS policy for admin users.", "error");
+      showNotice("Could not update order: " + error.message +
+        ". Check the orders UPDATE RLS policy and delivery_date column.", "error");
+    }
+  }
+
+  async function saveDeliveryDate(id, deliveryDate) {
+    if (!confirm(`Save delivery date ${deliveryDate} for this order?`)) return;
+    try {
+      const { error } = await db.from("orders").update({ delivery_date: deliveryDate }).eq("id", id);
+      if (error) throw error;
+      showNotice("Delivery date saved. Please inform the customer manually.", "success");
+      await loadOrders();
+    } catch (error) {
+      showNotice("Could not save delivery date: " + error.message +
+        ". Check the orders UPDATE RLS policy and delivery_date column.", "error");
     }
   }
 
