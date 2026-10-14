@@ -76,7 +76,7 @@
       <div id="ordersMessage" class="muted">Loading orders…</div>
       <div class="table-wrap">
         <table id="ordersTable" class="hidden">
-          <thead><tr><th>Order</th><th>Customer</th><th>Address</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Delivery date</th><th>Action</th></tr></thead>
+          <thead><tr><th>Order / Order date & time</th><th>Customer</th><th>Address</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Delivery date</th><th>Action</th></tr></thead>
           <tbody id="ordersBody"></tbody>
         </table>
       </div>
@@ -185,7 +185,30 @@
       }
       for (const order of data) {
         const tr = document.createElement("tr");
-        tr.appendChild(cell(order.order_id));
+        const orderCell = document.createElement("td");
+        const orderNumber = document.createElement("strong");
+        orderNumber.textContent = safe(order.order_id);
+        const orderDate = document.createElement("div");
+        orderDate.className = "muted";
+        if (order.created_at) {
+          const created = new Date(order.created_at);
+          orderDate.textContent = Number.isNaN(created.getTime())
+            ? safe(order.created_at)
+            : created.toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true,
+                timeZone: "Asia/Kolkata"
+              }) + " IST";
+        } else {
+          orderDate.textContent = "Date not available";
+        }
+        orderCell.append(orderNumber, orderDate);
+        tr.appendChild(orderCell);
         const customer = document.createElement("td");
         const customerName = document.createElement("strong");
         customerName.textContent = safe(order.customer_name);
