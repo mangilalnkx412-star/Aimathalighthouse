@@ -117,7 +117,7 @@ async function placeOrder(){
    const finalTotal=Number.isFinite(serverTotal)?serverTotal:o.total;
    result.innerHTML='<strong style="color:#187a3d">Order saved successfully!</strong><br>Order ID: <strong>'+esc(orderId)+'</strong><br>Total: <strong>'+rupees(finalTotal)+'</strong><br>Status: Pending shop confirmation.<br>Please keep your phone available. UPI payment is not automatically verified by this website.';
    if(method==="COD"){
-     cart={};save();renderCart();toast("Order saved. Await shop confirmation.");return;
+     cart={};save();renderCart();toast("Order confirmed successfully!");return;
    }
    document.getElementById("payment").style.display="block";
    document.getElementById("upiAmount").textContent=rupees(finalTotal);
